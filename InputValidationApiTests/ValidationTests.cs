@@ -13,8 +13,8 @@ namespace InputValidationApiTests
         [Fact]
         public void Should_Fail_When_Username_Is_Short()
         {
-            var dto = new UserDto { Username = "abc", Password = "123456", Role = "User" };
-            var validator = new UserDtoValidator();
+            var dto = new InputValidationApi.Dtos.UserInputDto { UserName = "abc", Role = "User", Email="job@atomcamp.com" };
+            var validator = new UserInputDtoValidator();
             var result = validator.Validate(dto);
             Assert.False(result.IsValid);
         }
@@ -22,8 +22,8 @@ namespace InputValidationApiTests
         [Fact]
         public void Should_Pass_With_Valid_Data()
         {
-            var dto = new UserDto { Username = "validUser", Password = "securePass", Role = "Admin" };
-            var validator = new UserDtoValidator();
+            var dto = new InputValidationApi.Dtos.UserInputDto { UserName = "validUser", Password = "securePass", Role = "Admin" };
+            var validator = new UserInputDtoValidator();
             var result = validator.Validate(dto);
             Assert.True(result.IsValid);
         }

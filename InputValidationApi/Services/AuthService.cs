@@ -1,6 +1,8 @@
-﻿namespace InputValidationApi.Services
+﻿using InputValidationApi.Interfaces;
+
+namespace InputValidationApi.Services
 {
-    public class AuthService
+    public class AuthService : IAuthService
     {
         public string HashPassword(string password)
         {

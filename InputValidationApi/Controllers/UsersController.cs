@@ -1,4 +1,7 @@
-﻿using InputValidationApi.Models;
+﻿using InputValidationApi.Dtos;
+using InputValidationApi.Generic;
+using InputValidationApi.Interfaces;
+using InputValidationApi.Models;
 using InputValidationApi.Services;
 using InputValidationApi.Validators;
 using Microsoft.AspNetCore.Authentication;
@@ -10,12 +13,19 @@ namespace InputValidationApi.Controllers
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
-        private readonly AuthService _authService = new AuthService();
+        private readonly IAuthService _authService;
+        private readonly IUserService _userService;
+
+        public UsersController(IAuthService authService, IUserService userService)
+        {
+            _authService = authService;
+            _userService = userService;
+        }
 
         [HttpPost("register")]
-        public IActionResult Register([FromBody] UserDto userDto)
+        public IActionResult Register([FromBody] UserInputDto userDto)
         {
-            var validator = new UserDtoValidator();
+            var validator = new UserInputDtoValidator();
             var result = validator.Validate(userDto);
 
             if (!result.IsValid)
@@ -23,35 +33,52 @@ namespace InputValidationApi.Controllers
                 return BadRequest(result.Errors);
             }
 
-            var hashedPassword = _authService.HashPassword(userDto.Password);
+            var user = _userService.SaveUser(userDto);
 
-            // Simulate saving to DB
             return Ok(new
             {
-                Username = userDto.Username,
-                HashedPassword = hashedPassword,
-                Role = userDto.Role
+                user.Email,
+                user.RegisteredOn
             });
         }
 
-        [HttpGet("admin-feature")]
-        public IActionResult AdminOnly([FromQuery] string role)
+        //[HttpGet("admin-feature")]
+        //public IActionResult AdminOnly([FromQuery] string role)
+        //{
+        //    if (!_authService.CanAccessAdminFeature(role))
+        //        return BadRequest("Only admin can access this");
+        //        // Forbid(AuthenticationScheme.Basic, AuthenticationScheme.NTLM, "Only admin can access this");
+
+        //    return Ok("Admin feature accessed!");
+        //}
+
+        //[HttpPost("register-data")]
+        //public IActionResult Register([FromBody] RegisterUserDto dto)
+        //{
+        //    if (!ModelState.IsValid)
+        //        return BadRequest(ModelState);
+
+        //    // Proceed with registration
+        //    return Ok();
+        //}
+
+        [HttpGet("{id}")]
+        public IActionResult GetUser(int id)
         {
-            if (!_authService.CanAccessAdminFeature(role))
-                return BadRequest("Only admin can access this");
-                // Forbid(AuthenticationScheme.Basic, AuthenticationScheme.NTLM, "Only admin can access this");
+            var user = _userService.GetUserById(id);
 
-            return Ok("Admin feature accessed!");
-        }
+            // Manual Validation
+            //var validator = new UserDtoValidator();
+            //var result = validator.Validate(user);
 
-        [HttpPost("register-data")]
-        public IActionResult Register([FromBody] RegisterUserDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            //if (!result.IsValid)
+            //    return StatusCode(500, "Output validation failed");
+            //////
 
-            // Proceed with registration
-            return Ok();
+            // Generic response
+            return Ok(new ApiResponse<Dtos.UserDto> { Data = user });
+
+            //return Ok(user);
         }
     }
 }
